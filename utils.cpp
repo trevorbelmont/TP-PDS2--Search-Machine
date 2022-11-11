@@ -51,7 +51,7 @@ string FlatString(string h) {
 }
 
 string Normalize(string h) {
-    // h = FlatString(h);
+    h = FlatString(h);
     h = CleanString(h);
     return h;
 }
