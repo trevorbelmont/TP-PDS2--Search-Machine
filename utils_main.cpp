@@ -9,16 +9,14 @@
 using namespace std;
 
 int main() {
-    setlocale(LC_ALL, "Portuguese");
-    string myString;
-
+    string query;
     do {
         cout << "Insira string a ser limpada:" << endl;
-        cin >> myString;
+        cin >> query;
 
-        myString = Normalize(myString);
+        query = Normalize(query);
 
-        cout << myString << endl;
+        cout << query << endl;
 
-    } while (myString.length() > 0);
+    } while (query.length() > 0);
 }
