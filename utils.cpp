@@ -1,15 +1,13 @@
 
 #include "utils.h"
 
-#include <locale.h>
-
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 
-using std::cout;
-using std::setlocale;
-using std::string;
+using namespace std;
+using std::filesystem::recursive_directory_iterator;
 
 string CleanString(string h) {
     if (h.empty()) {
@@ -29,7 +27,6 @@ string CleanString(string h) {
 
 // atualmente não é capaz de lidar com palavras acentudas
 string FlatString(string h) {
-    setlocale(LC_ALL, "Portuguese");
     if (h.length() == 0) {
         return h;
     }
@@ -63,4 +60,17 @@ string Normalize(string h) {
     h = CleanString(h);
     h = LeveledString(h);
     return h;
+}
+
+vector<string> RetriveFilePaths(string directory) {
+    vector<string> arquivos;
+
+    for (const auto& file : recursive_directory_iterator(directory)) {
+        // Condicional que filtra apenas caminhos com alguma extensão no nome
+        if (static_cast<string>(file.path()).find(".") != -1) {  // ou seja: ignora pastas
+            cout << file.path() << endl;
+            arquivos.insert(arquivos.end(), file.path());
+        }
+    }
+    return arquivos;
 }
