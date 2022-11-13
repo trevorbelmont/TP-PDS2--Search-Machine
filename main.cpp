@@ -12,7 +12,7 @@ using namespace std;
 
 int main() {
     string query;
-    Accio s = Accio("documentos");
+    Accio s;
 
     do {
         cout << "Insira string a ser limpada:" << endl;

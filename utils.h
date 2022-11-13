@@ -38,7 +38,9 @@ class Accio {  // referencia de Harry Potter, lol
     // carrega as palavras de todos os arquivos encontrados e mapeia por nome de arquivo
     int LoadAllFiles(vector<string> list_of_files);  // retorna o número de arquivos lidos com sucesso.
 
-    // remove characteres especiais (pontuação,símbolos e etc)
+    void NormalizeData();
+
+    // remove characteres especiais (pontuação, símbolos e etc)
     friend string CleanString(string h);
 
     // Remove acentos (e substitui pelas pobres letras americanas)
@@ -62,6 +64,7 @@ class Accio {  // referencia de Harry Potter, lol
 
     // diretório raíz para a busca
     string directory;
+    
 };
 
 // sobrecarrega o operadoro operador * para multiplicar strings por ela msm n vezes

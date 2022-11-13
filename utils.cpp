@@ -15,18 +15,7 @@ using std::filesystem::exists;
 using std::filesystem::recursive_directory_iterator;
 
 Accio::Accio() {
-    directory = "documentos";
-    do {
-        try {
-            allFiles = RetriveFilePaths(directory);
-        } catch (Invalid_Directory e) {
-            cout << e.msg << endl;
-            cout << "Insert a valid directory path or press Enter to search the current folder: ";
-            string cmd;
-            cin >> cmd;
-            directory = (cmd.length() == 0) ? "./" : cmd;
-        }
-    } while (allFiles.size() == 0);
+    (*this) = Accio("./");
 }
 
 Accio::Accio(string folder) {
@@ -43,7 +32,19 @@ Accio::Accio(string folder) {
             directory = (cmd.length() == 0) ? "./" : cmd;
         }
     } while (allFiles.size() == 0);
+
     (*this).LoadAllFiles(allFiles);
+    (*this).NormalizeData();
+}
+
+void Accio::NormalizeData() {
+    for (auto it = (*this).data.begin(); it != (*this).data.end(); it++) {
+        set<string> normalized;
+        for (auto st = it->second.begin(); st != it->second.end(); st++) {
+            normalized.insert(Normalize(*st));
+        }
+        it->second = normalized;
+    }
 }
 
 string Accio::RootFolder() {
@@ -117,7 +118,7 @@ int Accio::LoadAllFiles(vector<string> list_of_files) {
             loaded++;
         }
     }
-    cout << loaded << "/" << list_of_files.size() << " files loaded from " << (*this).directory << endl;
+    cout << loaded << "/" << list_of_files.size() << " files sucessfully loaded from " << (*this).directory << endl;
     return loaded;
 }
 
