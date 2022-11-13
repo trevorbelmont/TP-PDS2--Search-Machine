@@ -3,7 +3,7 @@
         {
             "type": "shell",
             "label": "Compilar",
-            "command": "g++ *.cpp -o exe -g",
+            "command": "g++ -std=c++17 *.cpp -o exe -g",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

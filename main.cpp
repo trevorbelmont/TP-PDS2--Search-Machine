@@ -11,14 +11,9 @@
 using namespace std;
 
 int main() {
-    ifstream file;
-
-    file.open(RetriveFilePaths("/mnt/")[0], fstream::in);
-
-    string line;
-    file >> line;
-
     string query;
+    Accio s = Accio("documentos");
+
     do {
         cout << "Insira string a ser limpada:" << endl;
         cin >> query;
@@ -28,6 +23,4 @@ int main() {
         cout << query << endl;
 
     } while (query.length() > 1);
-
-    cout << "--------> " << line;
 }
