@@ -13,6 +13,8 @@ using namespace std;
 int main() {
     string query;
     Accio s;
+    int lol = 9;
+    s.Reconsider(".git/");
 
     do {
         cout << "Insira string a ser limpada:" << endl;

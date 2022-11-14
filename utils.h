@@ -20,7 +20,10 @@ class Accio {  // referencia de Harry Potter, lol
         string msg;
     };
 
-    // Cria um motor que busca na pasta local (onde o executável está)
+    // ativa o fileIgnore
+    bool ignoring;
+
+    // Cria um motor que busca na pasta local (onde o executável está) com configurações de ignore padrão
     Accio();
 
     // cria um motor que busca na pasta na pasta especificada
@@ -28,6 +31,23 @@ class Accio {  // referencia de Harry Potter, lol
 
     // return the name of the root folder to be searched
     string RootFolder();
+
+    // adiciona a string "h" a lista de ignore. Retorna false se a string já foi ignorada.
+    bool AddIgnore(string h);
+
+    // adiciona todas as strings do vetor a lista de ignora. Retorna o número de NOVAS strings adicionadas
+    int AddIgnore(vector<string> h);
+
+    // adiciona as pastas padrão ( ".vscode/" e ".git/") a lista de ignore
+    void IgnoreDefault();
+
+    // remove a string h da lista de ignore. Sem atualizar os arquivos.
+    bool RemoveIgnore(string h);  // Retorna true se alguma string foi excluida da lista de ignore
+    // sintaxe alternativa para removeIgnore.
+    bool Reconsider(string h);
+
+    // limpa totalmente a lista de ignore
+    void ClearIgnore();
 
     // retorna vetor com  nome dos arquivos encontrados
     vector<string> FileList();
@@ -62,9 +82,9 @@ class Accio {  // referencia de Harry Potter, lol
     // nome e caminho dos arquivos, relativo a pasta de busca especificada
     vector<string> allFiles;
 
+    set<string> ignoreList;
     // diretório raíz para a busca
     string directory;
-    
 };
 
 // sobrecarrega o operadoro operador * para multiplicar strings por ela msm n vezes

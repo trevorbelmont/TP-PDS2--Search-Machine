@@ -16,8 +16,9 @@ using std::filesystem::recursive_directory_iterator;
 
 Accio::Accio() {
     (*this) = Accio("./");
+    ignoring = true;
+    IgnoreDefault();
 }
-
 Accio::Accio(string folder) {
     directory = folder;
     do {
@@ -46,6 +47,37 @@ void Accio::NormalizeData() {
         it->second = normalized;
     }
 }
+bool Accio::AddIgnore(string h) {
+    return (*this).ignoreList.insert(h).second;  // retorna se uma NOVA string foi adicionada ou não.
+}
+
+int Accio::AddIgnore(vector<string> h) {
+    int i = 0;
+    for (string s : h) {
+        if (this->ignoreList.insert(s).second) {  // adiciona cada string a lista
+            i++;                                  // soma mais um para cada NOVA strin adicionada
+        }
+    }
+    return i;
+}
+
+void Accio::IgnoreDefault() {
+    (*this).ignoring = true;
+    (*this).AddIgnore(".vscode/");
+    (*this).AddIgnore(".git/");
+}
+
+bool Accio::RemoveIgnore(string h) {
+    int i = (*this).ignoreList.erase(h);
+    return i != 0;
+}
+void Accio::ClearIgnore() {
+    (*this).ignoreList.clear();
+}
+
+bool Accio::Reconsider(string h) {
+    return (*this).RemoveIgnore(h);
+}
 
 string Accio::RootFolder() {
     return (*this).directory;
@@ -72,17 +104,17 @@ vector<string> RetriveFilePaths(string directory) {
     int counter = 0;
 
     for (const auto& file : recursive_directory_iterator(directory)) {
-        counter++;
-        if (static_cast<string>(file.path()).find("/.vscode/") != -1) {
+        
+        if (static_cast<string>(file.path()).find("/.vscode/") != -1) {  // pula o arquivo ou a pasta inteira
             continue;
         }
         // Condicional que filtra apenas caminhos com alguma extensão no nome
         string ending = static_cast<string>(file.path());
-        
 
         if (static_cast<string>(file.path()).find(".") != -1) {  // ou seja: ignora pastas
             // cout << file.path() << endl;
             arquivos.insert(arquivos.end(), file.path());
+            counter++;
         }
     }
     cout << arquivos.size() << " file names retrieved from " << directory << endl;
@@ -107,8 +139,7 @@ bool Accio::LoadFromFile(string path) {
         return false;
     }
     while (file >> word) {
-        // "insert a chave se ela  já não estiver presente no set
-        // [] sobreescreve a chave, caso já tenah sido sa nnoooooooo
+        // "insert - insere a palavra com chave "path" sem repetições
         data[path].insert(word);
     }
     return true;
