@@ -77,6 +77,9 @@ vector<string> RetriveFilePaths(string directory) {
             continue;
         }
         // Condicional que filtra apenas caminhos com alguma extensão no nome
+        string ending = static_cast<string>(file.path());
+        
+
         if (static_cast<string>(file.path()).find(".") != -1) {  // ou seja: ignora pastas
             // cout << file.path() << endl;
             arquivos.insert(arquivos.end(), file.path());
