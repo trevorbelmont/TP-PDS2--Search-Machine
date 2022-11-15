@@ -19,15 +19,14 @@ class Accio {  // referencia de Harry Potter, lol
         string filename;
         string msg;
     };
-
-    // ativa o fileIgnore
-    bool ignoring;
-
-    // Cria um motor que busca na pasta local (onde o executável está) com configurações de ignore padrão
+    // cria um buscador vazio. Sem autoinicialização. equivale a "Accio(FALSE)"
     Accio();
 
-    // cria um motor que busca na pasta na pasta especificada
+    // cria um motor que busca na pasta na pasta especificada ignorando apenas arquivos sem extensão
     Accio(string folder);
+
+    // Se TRUE - Cria um motor que busca na pasta local (onde o executável está). Usa configurações de ignore padrão
+    Accio(int mode);  // ignora pastas com /.vscode/ e /.git/
 
     // return the name of the root folder to be searched
     string RootFolder();
@@ -46,17 +45,28 @@ class Accio {  // referencia de Harry Potter, lol
     // sintaxe alternativa para removeIgnore.
     bool Reconsider(string h);
 
-    // limpa totalmente a lista de ignore
-    void ClearIgnore();
+    // limpa totalmente a lista de ignore e retorna o número string removidas da lista
+    int ClearIgnore();
 
-    // retorna vetor com  nome dos arquivos encontrados
-    vector<string> FileList();
+    // Remove da data os arquivos carregados que contem substrings das strings a serem ignoradas
+    int ReleaseIgnored();
+
+    // Remove todo o conteúdo carregado na data
+    void ReleaseData();
+
+    // Estabelece um novo diretório raiz de busca. NÃO ATUALIZA OU CARREGA NOVOS ARQUIVOS
+    bool SetDirectory(string folder);
+
+    // retorna um set com endereço de todos os arquivos encontrados
+    set<string> FileList();
+
+    void GetFiles(string h);
 
     // carrega as palavras de um arquivo individual, path, na data usando o nome do arquivo como chave
     bool LoadFromFile(string path);  // retorno true = carregou com sucesso. false = alguma falha
 
     // carrega as palavras de todos os arquivos encontrados e mapeia por nome de arquivo
-    int LoadAllFiles(vector<string> list_of_files);  // retorna o número de arquivos lidos com sucesso.
+    int LoadAllFiles(set<string> list_of_files);  // retorna o número de arquivos lidos com sucesso.
 
     void NormalizeData();
 
@@ -73,14 +83,14 @@ class Accio {  // referencia de Harry Potter, lol
     friend string Normalize(string h);  // usa as strings declaradas anteriormente
 
     // retorna o nome de todos os arquivos nos subdiretórios da pasta especificada
-    friend vector<string> RetriveFilePaths(string directory);
+    friend set<string> RetrieveFilePaths(string directory, set<string> igList);
 
    private:
     // container de palavras mapeadas por nome de arquivo
     map<string, set<string>> data;
 
     // nome e caminho dos arquivos, relativo a pasta de busca especificada
-    vector<string> allFiles;
+    set<string> allFiles;
 
     set<string> ignoreList;
     // diretório raíz para a busca
@@ -93,5 +103,5 @@ string operator*(string str, int n);
 
 string CleanString(string h);
 string LeveledString(string h);
-vector<string> RetriveFilePaths(string directory);
+set<string> RetrieveFilePaths(string directory, set<string> igList);
 string Normalize(string h);

@@ -14,16 +14,40 @@ using std::cout;
 using std::filesystem::exists;
 using std::filesystem::recursive_directory_iterator;
 
-Accio::Accio() {
-    (*this) = Accio("./");
-    ignoring = true;
-    IgnoreDefault();
-}
 Accio::Accio(string folder) {
     directory = folder;
+
+    GetFiles(directory);
+
+    LoadAllFiles(allFiles);
+    NormalizeData();
+}
+
+// um Accio Motor de Busca não inicializado
+Accio::Accio() {
+}
+
+Accio::Accio(int auto_initialize) {
+    if (auto_initialize > 0) {
+        IgnoreDefault();  // auto add .git e .vscode to ignore paths
+
+        directory = "./";
+
+        GetFiles(directory);
+
+        LoadAllFiles(allFiles);
+        NormalizeData();
+    } else if (auto_initialize == 0) {
+        Accio raw;
+        (*this) = raw;
+    }
+}
+
+void Accio::GetFiles(string h) {
+    directory = h;
     do {
         try {
-            allFiles = RetriveFilePaths(directory);
+            allFiles = RetrieveFilePaths(directory, ignoreList);
         } catch (Invalid_Directory e) {
             cout << e.msg << endl;
             cout << "Insert a valid directory path or press Enter to search the current folder: ";
@@ -31,11 +55,13 @@ Accio::Accio(string folder) {
             getline(cin, cmd);
 
             directory = (cmd.length() == 0) ? "./" : cmd;
+            if (exists(directory)) {  // && filesystem::is_directory(directory)) {
+                (this)->GetFiles(directory);
+                // allFiles = RetrieveFilePaths(directory, ignoreList);
+            }
         }
-    } while (allFiles.size() == 0);
 
-    (*this).LoadAllFiles(allFiles);
-    (*this).NormalizeData();
+    } while (!exists(directory));  // repete enquanto não encontrar um diretório válido
 }
 
 void Accio::NormalizeData() {
@@ -62,17 +88,58 @@ int Accio::AddIgnore(vector<string> h) {
 }
 
 void Accio::IgnoreDefault() {
-    (*this).ignoring = true;
     (*this).AddIgnore(".vscode/");
     (*this).AddIgnore(".git/");
+}
+
+int Accio::ClearIgnore() {
+    int cleared = (*this).ignoreList.size();
+    (*this).ignoreList.clear();
+    return cleared;
+}
+
+int Accio::ReleaseIgnored() {
+    if (ignoreList.empty()) {
+        return 0;
+    }
+
+    int ignored = 0;
+
+    for (auto it = (*this).data.begin(); it != (*this).data.end();) {
+        bool entryRemoved = false;
+        for (string s : (*this).ignoreList) {
+            if (it->first.find(s) != -1) {  // se alguma substring bate com uma das strings na ignoreList
+                (*this).allFiles.erase(it->first);
+                it = (*this).data.erase(it);  // apaga a entrada it e assinala next a próxima entrada válida
+                entryRemoved = true;
+                ignored++;
+                break;
+            }
+        }
+        if (entryRemoved == false) {
+            it++;
+        }
+    }
+    return ignored;
+}
+
+void Accio::ReleaseData() {
+    this->data.clear();
+    this->allFiles.clear();
+}
+
+bool Accio::SetDirectory(string folder) {
+    if (exists(folder)) {
+        (*this).directory = folder;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool Accio::RemoveIgnore(string h) {
     int i = (*this).ignoreList.erase(h);
     return i != 0;
-}
-void Accio::ClearIgnore() {
-    (*this).ignoreList.clear();
 }
 
 bool Accio::Reconsider(string h) {
@@ -83,11 +150,11 @@ string Accio::RootFolder() {
     return (*this).directory;
 }
 
-vector<string> Accio::FileList() {
+set<string> Accio::FileList() {
     return (*this).allFiles;
 }
 
-vector<string> RetriveFilePaths(string directory) {
+set<string> RetrieveFilePaths(string directory, set<string> igList) {
     // lança exceção caso nenhum diretório tenha sido especificado
     if (directory.empty()) {
         Accio::Invalid_Directory e{"", "Diretório não especificado!"};
@@ -96,28 +163,45 @@ vector<string> RetriveFilePaths(string directory) {
     // Lança exceção se o diretório não foi encontrado
     if (exists(directory) == false) {
         Accio::Invalid_Directory e{directory};
-        e.msg = "O diretório /" + e.directory + "/ não foi encontrado!";
+        e.msg = "O diretório \"/" + e.directory + "/\" não foi encontrado!";
+        throw(e);
+    }
+    if (filesystem::is_directory(directory) == false) {
+        Accio::Invalid_Directory e;
+        e.directory = directory;
+        e.msg = "That's not a directory, dumbass!!!";
         throw(e);
     }
 
-    vector<string> arquivos;
-    int counter = 0;
+    set<string> arquivos;
+    int loaded = 0;
+    int ignored = 0;
 
     for (const auto& file : recursive_directory_iterator(directory)) {
-        
-        if (static_cast<string>(file.path()).find("/.vscode/") != -1) {  // pula o arquivo ou a pasta inteira
-            continue;
-        }
-        // Condicional que filtra apenas caminhos com alguma extensão no nome
-        string ending = static_cast<string>(file.path());
+        bool skip = false;
 
-        if (static_cast<string>(file.path()).find(".") != -1) {  // ou seja: ignora pastas
+        if (igList.size() != 0) {
+            for (string ig : igList) {
+                // testa se há alguma substring que bate com a lista de ignore em path
+                if (static_cast<string>(file.path()).find(ig) != -1) {  // find retorna -1 caso não encontre a substring
+                    skip = true;
+                }
+            }
+            // caso este caminho esteja na lista de ignore, não adiciona ele a lista de arquivos
+            if (skip) {
+                ignored++;
+                continue;
+            }
+        }
+
+        // Testa se o caminho na lista pertence a um arquivo
+        if (filesystem::is_regular_file(file) == true) {  // ou seja: ignora pastas
             // cout << file.path() << endl;
             arquivos.insert(arquivos.end(), file.path());
-            counter++;
+            loaded++;
         }
     }
-    cout << arquivos.size() << " file names retrieved from " << directory << endl;
+    cout << arquivos.size() << " file names retrieved from \"" << directory << "\". " << ignored << " ignored." << endl;
     return arquivos;
 }
 
@@ -136,23 +220,30 @@ bool Accio::LoadFromFile(string path) {
     file.open(path);
     string word;
     if (file.is_open() == false) {
+        // cout << "Couldn't open " << path << endl;
         return false;
     }
     while (file >> word) {
         // "insert - insere a palavra com chave "path" sem repetições
         data[path].insert(word);
     }
+
+    // adiciona o arquivo lido a lista de arquivos
+    if (!allFiles.count(path)) {
+        allFiles.insert(path);
+    }
+
     return true;
 }
 
-int Accio::LoadAllFiles(vector<string> list_of_files) {
+int Accio::LoadAllFiles(set<string> list_of_files) {
     int loaded = 0;
     for (string file : list_of_files) {
         if ((*this).LoadFromFile(file)) {
             loaded++;
         }
     }
-    cout << loaded << "/" << list_of_files.size() << " files sucessfully loaded from " << (*this).directory << endl;
+    cout << loaded << "/" << list_of_files.size() << " files sucessfully loaded from \"" << (*this).directory << "\"." << endl;
     return loaded;
 }
 
