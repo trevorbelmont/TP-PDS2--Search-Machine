@@ -4,15 +4,16 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "utils.h"
 
 using namespace std;
 
-int main() {
-    string query;
+set<string> getNormalizedQuery();
 
+int main() {
     //-------- Exemplo de Motor genéricos ---------//
 
     Accio nul;               // cria motor de busca cru (vazio e não inicializado)
@@ -33,13 +34,30 @@ int main() {
 
     s.ReleaseIgnored();  // remove do banco de dados todos os arquivos da lista de ignorância.
 
+    //------- EXEMPLO DE BUSCA (FUNÇÕES TEMPORÁRIAS) -------//
+    while (1 > 0) {
+        cout << s.Search(getNormalizedQuery()) << " files found." << endl;
+    }
+}
+
+set<string> getNormalizedQuery() {
+    set<string> tokens;
+    string query;
     do {
-        cout << "Insira string a ser limpada ou aperte Enter para sair:" << endl;
+        tokens.clear();
+
+        string query;
+        cout << "Insira string a ser pesquisada ou aperte Enter para sair:" << endl;
         getline(cin, query);
 
-        query = Normalize(query);
+        // constrói um stream de string a partir da string query
+        stringstream tempStream(query);
+        string tempString;
+        while (getline(tempStream, tempString, ' ')) {
+            tempString = Normalize(tempString);
+            tokens.insert(tempString);
+        }
 
-        cout << query << endl;
-
-    } while (query.length() > 0);
+    } while (tokens.size() == 0);
+    return tokens;
 }

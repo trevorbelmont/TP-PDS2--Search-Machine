@@ -64,6 +64,29 @@ void Accio::GetFiles(string h) {
     } while (!exists(directory));  // repete enquanto não encontrar um diretório válido
 }
 
+int Accio::Search(set<string> query) {
+    if (query.empty()) {
+        return 0;
+    }
+
+    int results = 0;
+
+    // for que passsa por todos os arquivos
+    for (auto fl = (*this).data.begin(); fl != (*this).data.end(); fl++) {
+        int match = 1;  // inicialmente tem a query
+        // for que passa por todas as palvras da busca
+        for (string s : query) {
+            match *= fl->second.count(s);
+        }
+        if (match) {
+            results++;
+            cout << "\t" << fl->first << endl;
+        }
+    }
+    cout << endl;
+    return results;
+}
+
 void Accio::NormalizeData() {
     for (auto it = (*this).data.begin(); it != (*this).data.end(); it++) {
         set<string> normalized;
@@ -120,6 +143,7 @@ int Accio::ReleaseIgnored() {
             it++;
         }
     }
+    cout << ignored << " ignored files have been unload." << endl;
     return ignored;
 }
 

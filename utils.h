@@ -70,6 +70,8 @@ class Accio {  // referencia de Harry Potter, lol
 
     void NormalizeData();
 
+    int Search(set<string> query);
+
     // remove characteres especiais (pontuação, símbolos e etc)
     friend string CleanString(string h);
 
@@ -84,6 +86,8 @@ class Accio {  // referencia de Harry Potter, lol
 
     // retorna o nome de todos os arquivos nos subdiretórios da pasta especificada
     friend set<string> RetrieveFilePaths(string directory, set<string> igList);
+
+
 
    private:
     // container de palavras mapeadas por nome de arquivo
