@@ -68,9 +68,20 @@ class Accio {  // referencia de Harry Potter, lol
     // carrega as palavras de todos os arquivos encontrados e mapeia por nome de arquivo
     int LoadAllFiles(set<string> list_of_files);  // retorna o número de arquivos lidos com sucesso.
 
+    //carrega e mapeia as palavras da lista de arquivos atual e retorna o número de arquivos carregados
+    int LoadAllFiles();
+
+    // método que normaliza todos os dados carregados. na prática é um resquício da implementação anterior (índice direto)
     void NormalizeData();
 
+    // busca e lista os resultados a partir de um conjunto de palavras. retorna o número de resultados encontrados
     int Search(set<string> query);
+
+    // busca e lista os resultados a partir de uma string, retorna o número de arquivos encontrados
+    int Search(string query);
+
+    // Lê um string, lista os resultados encontrados e devolve o nḿero de arquivos encontrados.
+    int Search();
 
     // remove characteres especiais (pontuação, símbolos e etc)
     friend string CleanString(string h);
@@ -87,10 +98,8 @@ class Accio {  // referencia de Harry Potter, lol
     // retorna o nome de todos os arquivos nos subdiretórios da pasta especificada
     friend set<string> RetrieveFilePaths(string directory, set<string> igList);
 
-
-
    private:
-    // container de palavras mapeadas por nome de arquivo
+    // container de conjunto de arquvivos (set) mapeadas por palavras. (em quais arquivos a palavra (chave) aparece)
     map<string, set<string>> data;
 
     // nome e caminho dos arquivos, relativo a pasta de busca especificada
@@ -100,6 +109,12 @@ class Accio {  // referencia de Harry Potter, lol
     // diretório raíz para a busca
     string directory;
 };
+
+// demanda a entrada de uma string que será normalizada e partida em palavras e retornada num set
+set<string> getNormalizedQuery();
+
+// retorna a string h normalizada e dividade em palavras no formato de um set
+set<string> getNormalizedQuery(string h);
 
 // sobrecarrega o operadoro operador * para multiplicar strings por ela msm n vezes
 // se n for negativo, multiplica pelo inverso da string
