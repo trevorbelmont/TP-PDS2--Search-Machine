@@ -96,7 +96,7 @@ int Accio::Search(set<string> query) {
     }
 
     for (string s : whichFiles) {
-        cout << s << endl;
+        cout << "\t" << s << endl;
     }
     return results;
 }

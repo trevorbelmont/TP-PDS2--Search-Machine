@@ -42,6 +42,6 @@ int main() {
     //------- EXEMPLO DE BUSCA (FUNÇÕES TEMPORÁRIAS) -------//
 
     while (1 > 0) {
-        cout << nul.Search() << " files found." << endl;
+        cout << s.Search() << " files found." << endl;
     }
 }
