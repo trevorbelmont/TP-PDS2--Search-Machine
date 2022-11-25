@@ -1,12 +1,12 @@
 
+#include "Accio.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
 #include <vector>
-
-#include "Accio.h"
 
 using namespace std;
 using std::cin;
@@ -20,23 +20,20 @@ Accio::Accio(string folder) {
     GetFiles(directory);
 
     LoadAllFiles(allFiles);
-    NormalizeData();
 }
 
 // um Accio Motor de Busca não inicializado
-Accio::Accio() {
-}
+Accio::Accio() {}
 
 Accio::Accio(int auto_initialize) {
     if (auto_initialize > 0) {
-        IgnoreDefault();  // auto add .git e .vscode to ignore paths
+        IgnoreDefault();  // auto add .git, .pdf e .vscode to ignore paths
 
         directory = "./";
 
         GetFiles(directory);
 
         LoadAllFiles(allFiles);
-        NormalizeData();
     } else if (auto_initialize == 0) {
         Accio raw;
         (*this) = raw;
@@ -48,9 +45,11 @@ void Accio::GetFiles(string h) {
     do {
         try {
             allFiles = RetrieveFilePaths(directory, ignoreList);
+
         } catch (Invalid_Directory e) {
             cout << e.msg << endl;
-            cout << "Insert a valid directory path or press Enter to search the current folder: ";
+            cout << "Insert a valid directory path or press Enter to search the "
+                    "current folder: ";
             string cmd;
             getline(cin, cmd);
 
@@ -61,7 +60,17 @@ void Accio::GetFiles(string h) {
             }
         }
 
-    } while (!exists(directory));  // repete enquanto não encontrar um diretório válido
+    } while (
+        !exists(directory));  // repete enquanto não encontrar um diretório válido
+}
+
+bool Accio::GetFiles() {
+    if (filesystem::is_directory((*this).RootFolder()) == false) {
+        return false;
+    } else {
+        (*this).GetFiles((this->RootFolder()));
+    }
+    return true;
 }
 
 int Accio::Search(set<string> query) {
@@ -71,33 +80,46 @@ int Accio::Search(set<string> query) {
 
     int results = 0;
 
-    // for que passsa por todos os arquivos
-    for (auto fl = (*this).data.begin(); fl != (*this).data.end(); fl++) {
-        int match = 1;  // inicialmente tem a query
-        // for que passa por todas as palvras da busca
-        for (string s : query) {
-            match *= fl->second.count(s);
-        }
-        if (match) {
-            results++;
-            cout << "\t" << fl->first << endl;
+    string menorCardinalidade = *query.begin();
+    for (string s : query) {
+        if (data[s].size() < data[menorCardinalidade].size()) {
+            if (data[s].size() > 0) {
+                menorCardinalidade = s;
+            } else {
+                return 0;  // retorna 0 se qualaquer das palavras tem cardinalidade 0
+            }
         }
     }
-    cout << endl;
+
+    set<string> whichFiles;
+
+    // pra cada arquivo que contem a palavra de menor cardinalidade (menos
+    // recorrencia)
+    for (string fl : data[menorCardinalidade]) {
+        int matched = 1;
+        for (string word : query) {           // para cada palvra da query
+            matched *= data[word].count(fl);  // se o arquivo contem a palavra
+        }
+        if (matched !=
+            0) {  // if matched != 0 (se todos documetnos tem a palavra da query)
+            whichFiles.insert(fl);
+            results++;
+        }
+    }
+
+    for (string s : whichFiles) {
+        cout << "\t" << s << endl;
+    }
     return results;
 }
 
-void Accio::NormalizeData() {
-    for (auto it = (*this).data.begin(); it != (*this).data.end(); it++) {
-        set<string> normalized;
-        for (auto st = it->second.begin(); st != it->second.end(); st++) {
-            normalized.insert(Normalize(*st));
-        }
-        it->second = normalized;
-    }
-}
+int Accio::Search(string h) { return Search(getNormalizedQuery(h)); }
+
+int Accio::Search() { return Search(getNormalizedQuery()); }
+
 bool Accio::AddIgnore(string h) {
-    return (*this).ignoreList.insert(h).second;  // retorna se uma NOVA string foi adicionada ou não.
+    return (*this).ignoreList.insert(h).second;  // retorna se uma NOVA string foi
+                                                 // adicionada ou não.
 }
 
 int Accio::AddIgnore(vector<string> h) {
@@ -113,6 +135,7 @@ int Accio::AddIgnore(vector<string> h) {
 void Accio::IgnoreDefault() {
     (*this).AddIgnore(".vscode/");
     (*this).AddIgnore(".git/");
+    (*this).AddIgnore(".pdf");
 }
 
 int Accio::ClearIgnore() {
@@ -125,32 +148,31 @@ int Accio::ReleaseIgnored() {
     if (ignoreList.empty()) {
         return 0;
     }
-
     int ignored = 0;
 
-    for (auto it = (*this).data.begin(); it != (*this).data.end();) {
-        bool entryRemoved = false;
-        for (string s : (*this).ignoreList) {
-            if (it->first.find(s) != -1) {  // se alguma substring bate com uma das strings na ignoreList
-                (*this).allFiles.erase(it->first);
-                it = (*this).data.erase(it);  // apaga a entrada it e assinala next a próxima entrada válida
-                entryRemoved = true;
+    for (auto fl = (*this).allFiles.begin(); fl != allFiles.end();) {
+        bool erased = false;
+        for (auto ignr = (*this).ignoreList.begin();
+             ignr != (*this).ignoreList.end(); ignr++) {
+            if (static_cast<int>(fl->find(*ignr)) != -1) {
                 ignored++;
+                fl = allFiles.erase(fl);
+                erased = true;
                 break;
             }
         }
-        if (entryRemoved == false) {
-            it++;
+        if (erased == false) {
+            fl++;
         }
     }
+    (*this).ReleaseData();
+    (*this).LoadAllFiles((*this).allFiles);
+
     cout << ignored << " ignored files have been unload." << endl;
     return ignored;
 }
 
-void Accio::ReleaseData() {
-    this->data.clear();
-    this->allFiles.clear();
-}
+void Accio::ReleaseData() { this->data.clear(); }
 
 bool Accio::SetDirectory(string folder) {
     if (exists(folder)) {
@@ -166,17 +188,11 @@ bool Accio::RemoveIgnore(string h) {
     return i != 0;
 }
 
-bool Accio::Reconsider(string h) {
-    return (*this).RemoveIgnore(h);
-}
+bool Accio::Reconsider(string h) { return (*this).RemoveIgnore(h); }
 
-string Accio::RootFolder() {
-    return (*this).directory;
-}
+string Accio::RootFolder() { return (*this).directory; }
 
-set<string> Accio::FileList() {
-    return (*this).allFiles;
-}
+set<string> Accio::FileList() const { return (*this).allFiles; }
 
 set<string> RetrieveFilePaths(string directory, set<string> igList) {
     // lança exceção caso nenhum diretório tenha sido especificado
@@ -201,17 +217,19 @@ set<string> RetrieveFilePaths(string directory, set<string> igList) {
     int loaded = 0;
     int ignored = 0;
 
-    for (const auto& file : recursive_directory_iterator(directory)) {
+    for (const auto &file : recursive_directory_iterator(directory)) {
         bool skip = false;
 
         if (igList.size() != 0) {
             for (string ig : igList) {
                 // testa se há alguma substring que bate com a lista de ignore em path
-                if (static_cast<string>(file.path()).find(ig) != -1) {  // find retorna -1 caso não encontre a substring
+                if ((int)(static_cast<string>(file.path()).find(ig)) !=
+                    -1) {  // find retorna -1 caso não encontre a substring
                     skip = true;
                 }
             }
-            // caso este caminho esteja na lista de ignore, não adiciona ele a lista de arquivos
+            // caso este caminho esteja na lista de ignore, não adiciona ele a lista
+            // de arquivos
             if (skip) {
                 ignored++;
                 continue;
@@ -225,7 +243,8 @@ set<string> RetrieveFilePaths(string directory, set<string> igList) {
             loaded++;
         }
     }
-    cout << arquivos.size() << " file names retrieved from \"" << directory << "\". " << ignored << " ignored." << endl;
+    cout << arquivos.size() << " file names retrieved from \"" << directory
+         << "\". " << ignored << " ignored." << endl;
     return arquivos;
 }
 
@@ -248,11 +267,11 @@ bool Accio::LoadFromFile(string path) {
         return false;
     }
     while (file >> word) {
-        // "insert - insere a palavra com chave "path" sem repetições
-        data[path].insert(word);
+        word = Normalize(word);
+        //  "insert - insere a o caminho "path" na chave "word" repetições
+        data[word].insert(path);
     }
-
-    // adiciona o arquivo lido a lista de arquivos
+    // adiciona o arquivo lido a lista de arquivos se ele já não estiver lá
     if (!allFiles.count(path)) {
         allFiles.insert(path);
     }
@@ -267,15 +286,19 @@ int Accio::LoadAllFiles(set<string> list_of_files) {
             loaded++;
         }
     }
-    cout << loaded << "/" << list_of_files.size() << " files sucessfully loaded from \"" << (*this).directory << "\"." << endl;
+    cout << loaded << "/" << list_of_files.size()
+         << " files sucessfully loaded from \"" << (*this).directory << "\"."
+         << endl;
     return loaded;
 }
+
+int Accio::LoadAllFiles() { return (*this).LoadAllFiles((*this).allFiles); }
 
 string CleanString(string h) {
     if (h.empty()) {
         return h;  // string vazia. lança exceção?
     }
-    for (int i = 0; i < h.length(); i++) {
+    for (int i = 0; i < (int)(h.length()); i++) {
         char c = h[i];
 
         // Se não é uma letra comum (não acentuada) é apagado.
@@ -296,8 +319,8 @@ string FlatString(string h) {
 
     string reference = "ÄÅÁÂÀÃäáâàãÉÊËÈéêëèÍÎÏÌíîïìÖÓÔÒÕöóôòõÜÚÛüúûùÇç";
     string replace = "AAAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUuuuuCc";
-    for (int i = 0; i < h.length(); i++) {
-        for (int j = 0; j < reference.length(); j++) {
+    for (int i = 0; i < (int)h.length(); i++) {
+        for (int j = 0; j < (int)reference.length(); j++) {
             if ((char)h[i] == (char)reference[j]) {
                 s = s + replace[j];
                 break;
@@ -322,6 +345,41 @@ string Normalize(string h) {
     h = CleanString(h);
     h = LeveledString(h);
     return h;
+}
+
+set<string> Accio::getNormalizedQuery() {
+    set<string> tokens;
+    string query;
+    do {
+        tokens.clear();
+
+        string query;
+        cout << "Insira string a ser pesquisada ou aperte Enter para sair:" << endl;
+        getline(cin, query);
+
+        // constrói um stream de string a partir da string query
+        stringstream tempStream(query);
+        string tempString;
+        while (getline(tempStream, tempString, ' ')) {
+            tempString = Normalize(tempString);
+            if (!tempString.empty())
+                tokens.insert(tempString);
+        }
+
+    } while (tokens.size() == 0);
+    return tokens;
+}
+
+set<string> Accio::getNormalizedQuery(string h) {
+    stringstream tempStream(h);
+    string tempstring;
+    set<string> tokens;
+    while (getline(tempStream, tempstring, ' ')) {
+        tempstring = Normalize(tempstring);
+        if (!tempstring.empty())
+            tokens.insert(tempstring);
+    }
+    return tokens;
 }
 
 // multiplicador de string

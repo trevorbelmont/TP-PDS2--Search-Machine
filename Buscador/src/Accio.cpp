@@ -23,8 +23,7 @@ Accio::Accio(string folder) {
 }
 
 // um Accio Motor de Busca não inicializado
-Accio::Accio() {
-}
+Accio::Accio() {}
 
 Accio::Accio(int auto_initialize) {
     if (auto_initialize > 0) {
@@ -49,7 +48,8 @@ void Accio::GetFiles(string h) {
 
         } catch (Invalid_Directory e) {
             cout << e.msg << endl;
-            cout << "Insert a valid directory path or press Enter to search the current folder: ";
+            cout << "Insert a valid directory path or press Enter to search the "
+                    "current folder: ";
             string cmd;
             getline(cin, cmd);
 
@@ -60,7 +60,17 @@ void Accio::GetFiles(string h) {
             }
         }
 
-    } while (!exists(directory));  // repete enquanto não encontrar um diretório válido
+    } while (
+        !exists(directory));  // repete enquanto não encontrar um diretório válido
+}
+
+bool Accio::GetFiles() {
+    if (filesystem::is_directory((*this).RootFolder()) == false) {
+        return false;
+    } else {
+        (*this).GetFiles((this->RootFolder()));
+    }
+    return true;
 }
 
 int Accio::Search(set<string> query) {
@@ -83,13 +93,15 @@ int Accio::Search(set<string> query) {
 
     set<string> whichFiles;
 
-    // pra cada arquivo que contem a palavra de menor cardinalidade (menos recorrencia)
+    // pra cada arquivo que contem a palavra de menor cardinalidade (menos
+    // recorrencia)
     for (string fl : data[menorCardinalidade]) {
         int matched = 1;
         for (string word : query) {           // para cada palvra da query
             matched *= data[word].count(fl);  // se o arquivo contem a palavra
         }
-        if (matched != 0) {  // if matched != 0 (se todos documetnos tem a palavra da query)
+        if (matched !=
+            0) {  // if matched != 0 (se todos documetnos tem a palavra da query)
             whichFiles.insert(fl);
             results++;
         }
@@ -101,36 +113,13 @@ int Accio::Search(set<string> query) {
     return results;
 }
 
-int Accio::Search(string h) {
-    return Search(getNormalizedQuery(h));
-}
+int Accio::Search(string h) { return Search(getNormalizedQuery(h)); }
 
-int Accio::Search() {
-    return Search(getNormalizedQuery());
-}
-
-void Accio::NormalizeData() {
-    for (auto it = data.begin(); it != data.end();) {
-        set recorrencia = it->second;
-        string plain = Normalize(it->first);
-        bool changed = false;
-
-        if (plain.empty()) {
-            it = data.erase(it);
-            changed = true;
-        } else {
-            it = data.erase(it);
-            data[plain] = recorrencia;
-            changed = true;
-        }
-        if (!changed) {
-            it++;
-        }
-    }
-}
+int Accio::Search() { return Search(getNormalizedQuery()); }
 
 bool Accio::AddIgnore(string h) {
-    return (*this).ignoreList.insert(h).second;  // retorna se uma NOVA string foi adicionada ou não.
+    return (*this).ignoreList.insert(h).second;  // retorna se uma NOVA string foi
+                                                 // adicionada ou não.
 }
 
 int Accio::AddIgnore(vector<string> h) {
@@ -163,8 +152,9 @@ int Accio::ReleaseIgnored() {
 
     for (auto fl = (*this).allFiles.begin(); fl != allFiles.end();) {
         bool erased = false;
-        for (auto ignr = (*this).ignoreList.begin(); ignr != (*this).ignoreList.end(); ignr++) {
-            if (fl->find(*ignr) != -1) {
+        for (auto ignr = (*this).ignoreList.begin();
+             ignr != (*this).ignoreList.end(); ignr++) {
+            if (static_cast<int>(fl->find(*ignr)) != -1) {
                 ignored++;
                 fl = allFiles.erase(fl);
                 erased = true;
@@ -182,9 +172,7 @@ int Accio::ReleaseIgnored() {
     return ignored;
 }
 
-void Accio::ReleaseData() {
-    this->data.clear();
-}
+void Accio::ReleaseData() { this->data.clear(); }
 
 bool Accio::SetDirectory(string folder) {
     if (exists(folder)) {
@@ -200,17 +188,11 @@ bool Accio::RemoveIgnore(string h) {
     return i != 0;
 }
 
-bool Accio::Reconsider(string h) {
-    return (*this).RemoveIgnore(h);
-}
+bool Accio::Reconsider(string h) { return (*this).RemoveIgnore(h); }
 
-string Accio::RootFolder() {
-    return (*this).directory;
-}
+string Accio::RootFolder() { return (*this).directory; }
 
-set<string> Accio::FileList() {
-    return (*this).allFiles;
-}
+set<string> Accio::FileList() const { return (*this).allFiles; }
 
 set<string> RetrieveFilePaths(string directory, set<string> igList) {
     // lança exceção caso nenhum diretório tenha sido especificado
@@ -235,17 +217,19 @@ set<string> RetrieveFilePaths(string directory, set<string> igList) {
     int loaded = 0;
     int ignored = 0;
 
-    for (const auto& file : recursive_directory_iterator(directory)) {
+    for (const auto &file : recursive_directory_iterator(directory)) {
         bool skip = false;
 
         if (igList.size() != 0) {
             for (string ig : igList) {
                 // testa se há alguma substring que bate com a lista de ignore em path
-                if (static_cast<string>(file.path()).find(ig) != -1) {  // find retorna -1 caso não encontre a substring
+                if ((int)(static_cast<string>(file.path()).find(ig)) !=
+                    -1) {  // find retorna -1 caso não encontre a substring
                     skip = true;
                 }
             }
-            // caso este caminho esteja na lista de ignore, não adiciona ele a lista de arquivos
+            // caso este caminho esteja na lista de ignore, não adiciona ele a lista
+            // de arquivos
             if (skip) {
                 ignored++;
                 continue;
@@ -259,7 +243,8 @@ set<string> RetrieveFilePaths(string directory, set<string> igList) {
             loaded++;
         }
     }
-    cout << arquivos.size() << " file names retrieved from \"" << directory << "\". " << ignored << " ignored." << endl;
+    cout << arquivos.size() << " file names retrieved from \"" << directory
+         << "\". " << ignored << " ignored." << endl;
     return arquivos;
 }
 
@@ -301,19 +286,19 @@ int Accio::LoadAllFiles(set<string> list_of_files) {
             loaded++;
         }
     }
-    cout << loaded << "/" << list_of_files.size() << " files sucessfully loaded from \"" << (*this).directory << "\"." << endl;
+    cout << loaded << "/" << list_of_files.size()
+         << " files sucessfully loaded from \"" << (*this).directory << "\"."
+         << endl;
     return loaded;
 }
 
-int Accio::LoadAllFiles() {
-    return (*this).LoadAllFiles((*this).allFiles);
-}
+int Accio::LoadAllFiles() { return (*this).LoadAllFiles((*this).allFiles); }
 
 string CleanString(string h) {
     if (h.empty()) {
         return h;  // string vazia. lança exceção?
     }
-    for (int i = 0; i < h.length(); i++) {
+    for (int i = 0; i < (int)(h.length()); i++) {
         char c = h[i];
 
         // Se não é uma letra comum (não acentuada) é apagado.
@@ -334,8 +319,8 @@ string FlatString(string h) {
 
     string reference = "ÄÅÁÂÀÃäáâàãÉÊËÈéêëèÍÎÏÌíîïìÖÓÔÒÕöóôòõÜÚÛüúûùÇç";
     string replace = "AAAAAAaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUuuuuCc";
-    for (int i = 0; i < h.length(); i++) {
-        for (int j = 0; j < reference.length(); j++) {
+    for (int i = 0; i < (int)h.length(); i++) {
+        for (int j = 0; j < (int)reference.length(); j++) {
             if ((char)h[i] == (char)reference[j]) {
                 s = s + replace[j];
                 break;
@@ -362,7 +347,7 @@ string Normalize(string h) {
     return h;
 }
 
-set<string> getNormalizedQuery() {
+set<string> Accio::getNormalizedQuery() {
     set<string> tokens;
     string query;
     do {
@@ -377,20 +362,22 @@ set<string> getNormalizedQuery() {
         string tempString;
         while (getline(tempStream, tempString, ' ')) {
             tempString = Normalize(tempString);
-            if (!tempString.empty()) tokens.insert(tempString);
+            if (!tempString.empty())
+                tokens.insert(tempString);
         }
 
     } while (tokens.size() == 0);
     return tokens;
 }
 
-set<string> getNormalizedQuery(string h) {
+set<string> Accio::getNormalizedQuery(string h) {
     stringstream tempStream(h);
     string tempstring;
     set<string> tokens;
-    while (getline(tempStream, tempstring)) {
+    while (getline(tempStream, tempstring, ' ')) {
         tempstring = Normalize(tempstring);
-        if (!tempstring.empty()) tokens.insert(tempstring);
+        if (!tempstring.empty())
+            tokens.insert(tempstring);
     }
     return tokens;
 }
