@@ -353,8 +353,9 @@ set<string> Accio::getNormalizedQuery() {
     do {
         tokens.clear();
 
+
         string query;
-        cout << "Insira string a ser pesquisada ou aperte Enter para sair:" << endl;
+        cout << "Insira string a ser pesquisada:" << endl;
         getline(cin, query);
 
         // constrói um stream de string a partir da string query

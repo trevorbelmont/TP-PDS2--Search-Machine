@@ -2,6 +2,8 @@
 
 #include "Accio.h"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -45,13 +47,29 @@ TEST_SUITE("Construtores") {
 
 TEST_SUITE("Funções de Inicialização") {
     TEST_CASE("Testa funcao SetDirectory") {
-        Accio t("./");
+        // cria um para simular a entrada padrão nos prompts da função
+        std::ofstream out;
+        std::string arqTest = "testInput.txt";
+        out.open(arqTest, std::ofstream::out | std::ofstream::trunc);
+        out << "este_também_não" << std::endl;
+        out << folder << std::endl;
+        out.close();
+
+        std::streambuf *defaultBuffer = std::cin.rdbuf();  // faz um backup do buffer de entrada padrão
+        std::ifstream newBuffer("testInput.txt");          // cria um novo buffer de entrada
+        std::cin.rdbuf(newBuffer.rdbuf());                 // atribui a entrada padrão (cin) ao novo buffer
+
+        Accio t("./");  // cria buscador na pasta raí, não no folder de teste padrão
 
         CHECK_FALSE(t.RootFolder() == folder);
-        // CHECK(t.SetDirectory("_-_Abracadabra_-_") == false);
+        CHECK(t.SetDirectory("_-_Abracadabra_-_") == false);
+
         CHECK(t.SetDirectory(folder) == true);
 
         CHECK(t.RootFolder() == folder);
+
+        std::cin.rdbuf(defaultBuffer);
+        std::filesystem::remove(arqTest);
     }
 
     TEST_CASE("Testa função GetFiles(directory)") {
@@ -118,7 +136,7 @@ TEST_SUITE("Funcionalidades de Busca") {
         // CHECK(nul.getNormalizedQuery().count("vento") == 1);
     }
 
-    TEST_CASE("Testa Buscas") {
+    TEST_CASE("Testa Buscas sem prompt: Search() e Search(set") {
         Accio t(folder);
 
         CHECK_FALSE(t.Search("não tem isso") > 0);
@@ -130,6 +148,34 @@ TEST_SUITE("Funcionalidades de Busca") {
 
         // CHECK(t.Search() > 0);
     }
+}
+
+TEST_CASE("Testa Busca com prompt") {
+    // prepara o teste criando um arquivo que será usado como  buffer de entrada padrão durante o teste.
+    std::string filename = "inputTest.txt";
+    std::ofstream out;
+    out.open(filename, std::ofstream::out | std::ofstream::trunc);
+    out << "não tem isso" << std::endl
+        << "so tem isso" << std::endl
+        << "single day" << std::endl;
+    out.close();
+
+    // redireciona o buffer
+    std::streambuf *defaultBuffer = std::cin.rdbuf();  // bckup
+    std::ifstream newBuffer;
+    newBuffer = std::ifstream(filename);  // = filename;
+    std::cin.rdbuf(newBuffer.rdbuf());
+
+    // testa
+    Accio t(folder);
+
+    CHECK(t.Search() == 0);
+    CHECK(t.Search() > 0);
+    CHECK(t.Search() > 0);
+
+    // apaga arquivos temporários criados e restaura o buffer do cin pro padrão
+    std::filesystem::remove(filename);
+    std::cin.rdbuf(defaultBuffer);
 }
 
 TEST_SUITE("Testa ignore features") {
@@ -159,7 +205,7 @@ TEST_SUITE("Testa ignore features") {
 
         bool ignorou = true;
         for (string h : auto_.FileList()) {
-            if (h.find(".pdf") != -1) {
+            if ((int)h.find(".pdf") != -1) {
                 ignorou = false;
                 break;
             }
@@ -172,7 +218,7 @@ TEST_SUITE("Testa ignore features") {
 
         ignorou = true;
         for (string h : auto_.FileList()) {
-            if (h.find(".pdf") != -1) {
+            if ((int)h.find(".pdf") != -1) {
                 ignorou = false;
                 break;
             }
@@ -189,7 +235,7 @@ TEST_SUITE("Testa ignore features") {
 
         bool ignorou = true;
         for (string h : auto_.FileList()) {
-            if (h.find(".pdf") != -1) {
+            if ((int)h.find(".pdf") != -1) {
                 ignorou = false;
                 break;
             }
@@ -203,7 +249,7 @@ TEST_SUITE("Testa ignore features") {
 
         ignorou = true;
         for (string h : auto_.FileList()) {
-            if (h.find(".pdf") != -1) {
+            if ((int)h.find(".pdf") != -1) {
                 ignorou = false;
                 break;
             }
@@ -217,7 +263,7 @@ TEST_SUITE("Testa ignore features") {
 
         bool ignorou = true;
         for (string h : t.FileList()) {  // testa se deixou de carregar o arquivo com extensão .pdf
-            if (h.find(".pdf") != -1) {
+            if ((int)h.find(".pdf") != -1) {
                 ignorou = false;
                 break;
             }
@@ -229,7 +275,7 @@ TEST_SUITE("Testa ignore features") {
 
         ignorou = true;
         for (string h : t.FileList()) {  // testa se deixou de carregar o arquivo com extensão .pdf
-            if (h.find(".pdf") != -1) {
+            if ((int)h.find(".pdf") != -1) {
                 ignorou = false;
                 break;
             }

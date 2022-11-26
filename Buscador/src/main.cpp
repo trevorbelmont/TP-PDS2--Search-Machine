@@ -11,36 +11,24 @@
 
 using namespace std;
 
+set<string> getNormalizedQuery();
+
 int main() {
-    //-------- Exemplo de Motores genéricos (uso avançado) ---------//
+    Accio s("documentos");  // cria um motor de busca na pasta do programa sem
+                            // ignorar nadA  E CARREGA OS ARQUIVOS
+    cout << endl;
 
-    Accio nul;               // cria motor de busca cru (vazio e não inicializado)
-    Accio otherNull(false);  // tb cria motor de busca vazio e não inicializado
-    Accio generico(true);    // cria motor de busca inicializado na raiz com ignore padrão
+    string query;
+    do {
+        query = "";
+        cout << "Digite sua pesquisa ou pressione ENTER para sair:  ";
+        getline(cin, query);
 
-    // inicializa e e carrega os arquivos do motor não inicializado
-    nul.SetDirectory("./");
-    nul.GetFiles(nul.RootFolder());
-    nul.LoadAllFiles();
+        if (query.size() == 0) {
+            exit(0);
+        }
 
-    //------ EXEMPLO DE IGNORAR DEPOIS DE JÁ CARREGADO -----//
+        cout << s.Search(query) << " files found." << endl;
 
-    Accio s("documentos");  // cria um motor de busca na pasta do programa sem ignorar nadA  E CARREGA OS ARQUIVOS
-
-    s.IgnoreDefault();  // adiciona as strings padrão pra lista de ignore (pasta .vscode e .git)
-
-    s.AddIgnore(".cpp");  // adiciona algumas strings a lista de ignore
-    s.AddIgnore(".h");    // nesse caso ignorando todos os arquivos de c.
-    s.AddIgnore(".pdf");
-
-    s.ReleaseIgnored();
-
-    // int unload = s.ReleaseIgnored();
-    //  s.NormalizeData();
-
-    //------- EXEMPLO DE BUSCA (FUNÇÕES TEMPORÁRIAS) -------//
-
-    while (1 > 0) {
-        cout << s.Search() << " files found." << endl;
-    }
+    } while (query.size() != 0);
 }
