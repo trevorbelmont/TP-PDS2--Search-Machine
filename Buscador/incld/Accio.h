@@ -29,7 +29,7 @@ class Accio {  // referencia de Harry Potter, lol
     Accio(int mode);  // ignora pastas com /.vscode/ e /.git/
 
     // return the name of the root folder to be searched
-    string RootFolder();
+    string RootFolder() const;
 
     // Estabelece um novo diretório raiz de busca. NÃO ATUALIZA OU CARREGA NOVOS ARQUIVOS
     bool SetDirectory(string folder);
@@ -37,10 +37,10 @@ class Accio {  // referencia de Harry Potter, lol
     // retorna um set com endereço de todos os arquivos encontrados
     set<string> FileList() const;
 
-    //carrega o endereço de todos os arquivos na pasta h
+    // carrega o endereço de todos os arquivos na pasta h
     void GetFiles(string h);
 
-    //carrega o endereço de todos os arquivos no diretório atual. retorna falso se não houver um diretório válido
+    // carrega o endereço de todos os arquivos no diretório atual. retorna falso se não houver um diretório válido
     bool GetFiles();
 
     // carrega as palavras de um arquivo individual, path, na data usando o nome do arquivo como chave

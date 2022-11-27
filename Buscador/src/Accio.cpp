@@ -93,15 +93,13 @@ int Accio::Search(set<string> query) {
 
     set<string> whichFiles;
 
-    // pra cada arquivo que contem a palavra de menor cardinalidade (menos
-    // recorrencia)
+    // pra cada arquivo que contem a palavra de menor cardinalidade (menor recorrencia)
     for (string fl : data[menorCardinalidade]) {
         int matched = 1;
         for (string word : query) {           // para cada palvra da query
-            matched *= data[word].count(fl);  // se o arquivo contem a palavra
+            matched *= data[word].count(fl);  // chega se o arquivo está no set da palavra da query
         }
-        if (matched !=
-            0) {  // if matched != 0 (se todos documetnos tem a palavra da query)
+        if (matched != 0) {  // if matched != 0 (se  aquele documento possui a outra palavra da qurery
             whichFiles.insert(fl);
             results++;
         }
@@ -190,7 +188,7 @@ bool Accio::RemoveIgnore(string h) {
 
 bool Accio::Reconsider(string h) { return (*this).RemoveIgnore(h); }
 
-string Accio::RootFolder() { return (*this).directory; }
+string Accio::RootFolder() const { return (*this).directory; }
 
 set<string> Accio::FileList() const { return (*this).allFiles; }
 
@@ -352,7 +350,6 @@ set<string> Accio::getNormalizedQuery() {
     string query;
     do {
         tokens.clear();
-
 
         string query;
         cout << "Insira string a ser pesquisada:" << endl;
