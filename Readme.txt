@@ -13,3 +13,6 @@ make clear      : Remove os executáveis gerados (tanto do Bsucador quanto dos T
 make clear_all  : Remove tanto os executáveis quanto os objetos já compilados
 
 *Como esperado, nenhum dos comandos make recompilam ou linkam objetos ou executáveis que estejam atualizados.
+**As funcionalidades adicionais (como AddIgnore, RemoveIgnore, ReleaseData ReleaseIgnored) não são utilizadas, uma vez que não são necessárias para este trabalho.
+Porém todas elas estão implementadas e testadas no arquivo de Testes de Unidades - que pode ser usado como referência de sintaxe para eles. 
+
